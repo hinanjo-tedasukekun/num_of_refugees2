@@ -56,7 +56,9 @@ private:
     // 数字待ち 4 回目
     WAITING_NUM_4,
     // '\r' 待ち
-    WAITING_CR
+    WAITING_CR,
+    // '\n' 待ち
+    WAITING_LF
   };
 
   // 有限状態機械の状態

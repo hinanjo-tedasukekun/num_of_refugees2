@@ -70,7 +70,10 @@ CountRefugeesMatcher::State CountRefugeesMatcher::put(char c) {
     readDigit(c, WAITING_CR, true);
     break;
   case WAITING_CR:
-    state_ = (c == '\r') ? ACCEPTED : REJECTED;
+    read(c, '\r', WAITING_LF);
+    break;
+  case WAITING_LF:
+    state_ = (c == '\n') ? ACCEPTED : REJECTED;
     break;
   default:
     state_ = REJECTED;
@@ -107,7 +110,7 @@ void CountRefugeesMatcher::readDigit(
 
     read_state_ = next_state;
   } else if (allow_cr && c == '\r') {
-    state_ = ACCEPTED;
+    read_state_ = WAITING_LF;
   } else {
     state_ = REJECTED;
   }
