@@ -14,7 +14,7 @@ constexpr int N_DIGITS = 4;
 // カソードのピン
 constexpr int KATHODE_PIN[N_DIGITS] = { 4, 5, 6, 7 };
 // 各桁の点灯時間
-constexpr int LIGHTING_LENGTH = 4;
+constexpr int LIGHTING_LENGTH = 2;
 
 // 7 セグ LED の数字表示データ
 constexpr byte SEG_LED_NUM_DATA[] = {
@@ -81,6 +81,11 @@ void setup() {
 void loop() {
   CountRefugeesMatcher::State matcherState;
 
+  // シリアル通信の受信バッファを空にする
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+
   // 避難者数要求送信
   Serial.println("@019DNU");
 
@@ -101,11 +106,9 @@ void loop() {
   if (matcherState == CountRefugeesMatcher::State::ACCEPTED) {
     matcher.copyDigitsTo(numBuff);
     setSegLedData();
-
-    delay(1000);
-  } else {
-    delay(100);
   }
+
+  delay(1000);
 }
 
 // 7 セグ LED のデータを設定する
