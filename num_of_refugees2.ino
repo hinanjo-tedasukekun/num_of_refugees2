@@ -14,8 +14,8 @@ constexpr int RCK_PIN = 10;
 
 // 桁数
 constexpr int N_DIGITS = 4;
-// カソードのピン
-constexpr int KATHODE_PIN[N_DIGITS] = { 4, 5, 6, 7 };
+// アノードのピン
+constexpr int ANODE_PIN[N_DIGITS] = { 4, 5, 6, 7 };
 // 各桁の点灯時間
 constexpr int LIGHTING_LENGTH = 2;
 
@@ -44,8 +44,8 @@ constexpr byte SEG_LED_NUM_DATA[] = {
 // 7 セグ LED の消灯データ
 constexpr byte SEG_LED_OFF = 0b00000000;
 
-// 現在のカソード
-int currentKathode = 0;
+// 現在のアノード
+int currentAnode = 0;
 
 // 各桁のデータ
 int segLedData[N_DIGITS] = {
@@ -72,8 +72,8 @@ void setup() {
   SPI.setDataMode(SPI_MODE0);
 
   for (int i = 0; i < N_DIGITS; ++i) {
-    pinMode(KATHODE_PIN[i], OUTPUT);
-    digitalWrite(KATHODE_PIN[i], i == 0);
+    pinMode(ANODE_PIN[i], OUTPUT);
+    digitalWrite(ANODE_PIN[i], i == 0);
   }
 
   // タイマー割り込みの設定
@@ -128,18 +128,18 @@ void setSegLedData() {
 
 // タイマー割り込みハンドラ：桁の移動
 void shiftDigit() {
-  // カソードの移動
-  ++currentKathode;
-  if (currentKathode >= N_DIGITS) {
-    currentKathode = 0;
+  // アノードの移動
+  ++currentAnode;
+  if (currentAnode >= N_DIGITS) {
+    currentAnode = 0;
   }
 
   for (int i = 0; i < N_DIGITS; ++i) {
-    digitalWrite(KATHODE_PIN[i], i == currentKathode);
+    digitalWrite(ANODE_PIN[i], i == currentAnode);
   }
 
   // 桁に対応したデータを出力する
   digitalWrite(RCK_PIN, LOW);
-  SPI.transfer(segLedData[currentKathode]);
+  SPI.transfer(segLedData[currentAnode]);
   digitalWrite(RCK_PIN, HIGH);
 }
