@@ -6,6 +6,9 @@
 #include <MsTimer2.h>
 #include "CountRefugeesMatcher.h"
 
+// トグルスイッチのピン
+constexpr int SW_PIN = 3;
+
 // ラッチ動作出力ピン
 constexpr int RCK_PIN = 10;
 
@@ -86,8 +89,10 @@ void loop() {
     Serial.read();
   }
 
+  bool sw = digitalRead(SW_PIN);
+
   // 避難者数要求送信
-  Serial.println("@019DNU");
+  Serial.println(sw == LOW ? "@019DNU" : "@019DNP");
 
   matcher.reset();
   while (true) {
@@ -108,7 +113,7 @@ void loop() {
     setSegLedData();
   }
 
-  delay(1000);
+  delay(500);
 }
 
 // 7 セグ LED のデータを設定する

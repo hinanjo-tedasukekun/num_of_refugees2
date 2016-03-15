@@ -43,8 +43,8 @@ private:
     WAITING_U_1,
     // 'N' 待ち
     WAITING_N,
-    // 'U' 待ち 2 回目
-    WAITING_U_2,
+    // [UP] 待ち
+    WAITING_U_P,
     // ' ' 待ち
     WAITING_SP,
     // 数字待ち 1 回目

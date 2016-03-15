@@ -49,10 +49,15 @@ CountRefugeesMatcher::State CountRefugeesMatcher::put(char c) {
     read(c, 'U', WAITING_N);
     break;
   case WAITING_N:
-    read(c, 'N', WAITING_U_2);
+    read(c, 'N', WAITING_U_P);
     break;
-  case WAITING_U_2:
-    read(c, 'U', WAITING_SP);
+  case WAITING_U_P:
+    if (c == 'U' || c == 'P') {
+      read_state_ = WAITING_SP;
+    } else {
+      state_ = REJECTED;
+    }
+
     break;
   case WAITING_SP:
     read(c, ' ', WAITING_NUM_1);
