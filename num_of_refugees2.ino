@@ -1,6 +1,6 @@
 /*
- * 4 桁 7 セグ LED で避難者数を表示する
- */
+   4 桁 7 セグ LED で避難者数を表示する
+*/
 
 #include <SPI.h>
 #include <MsTimer2.h>
@@ -11,6 +11,19 @@ constexpr int SW_PIN = 3;
 
 // ラッチ動作出力ピン
 constexpr int RCK_PIN = 10;
+// 合計世帯人数のSWピン
+constexpr int SW_ALL_PIN = A0;
+// 登録避難者数のSWピン
+constexpr int SW_REGISTERED_PIN = A1;
+// 在室避難者数のSWピン
+constexpr int SW_PRESENT_PIN = A2;
+
+// 合計世帯人数のLEDピン
+constexpr int LED_ALL_PIN = A3;
+// 登録避難者数のLEDピン
+constexpr int LED_REGISTERED_PIN = A4;
+// 在室避難者数のLEDピン
+constexpr int LED_PRESENT_PIN = A5;
 
 // 桁数
 constexpr int N_DIGITS = 4;
@@ -50,15 +63,19 @@ int currentAnode = 0;
 // 各桁のデータ
 int segLedData[N_DIGITS] = {
   SEG_LED_NUM_DATA[0],
-  SEG_LED_NUM_DATA[0],
-  SEG_LED_NUM_DATA[0],
-  SEG_LED_NUM_DATA[0]
+  SEG_LED_NUM_DATA[1],
+  SEG_LED_NUM_DATA[2],
+  SEG_LED_NUM_DATA[3]
 };
 
 // 数字を入れるバッファ
 char numBuff[N_DIGITS];
 // 避難者数パターンへのマッチャ
 CountRefugeesMatcher matcher;
+
+int swAllState = HIGH;
+int swRegisteredState = HIGH;
+int swPresentState = HIGH;
 
 void setup() {
   Serial.begin(9600);
@@ -70,6 +87,14 @@ void setup() {
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV16);
   SPI.setDataMode(SPI_MODE0);
+
+  pinMode(SW_ALL_PIN, INPUT_PULLUP); // Inputモードでプルアップ抵抗を有効に
+  pinMode(SW_REGISTERED_PIN, INPUT_PULLUP); // Inputモードでプルアップ抵抗を有効に
+  pinMode(SW_PRESENT_PIN, INPUT_PULLUP); // Inputモードでプルアップ抵抗を有効に
+
+  pinMode(LED_ALL_PIN, OUTPUT);
+  pinMode(LED_REGISTERED_PIN, OUTPUT);
+  pinMode(LED_PRESENT_PIN, OUTPUT);
 
   for (int i = 0; i < N_DIGITS; ++i) {
     pinMode(ANODE_PIN[i], OUTPUT);
@@ -89,31 +114,54 @@ void loop() {
     Serial.read();
   }
 
-  bool sw = digitalRead(SW_PIN);
+  swAllState = digitalRead(SW_ALL_PIN);
+  swRegisteredState = digitalRead(SW_REGISTERED_PIN);
+  swPresentState = digitalRead(SW_PRESENT_PIN);
 
-  // 避難者数要求送信
-  Serial.println(sw == LOW ? "@019DNU" : "@019DNP");
+  if (swAllState == LOW)
+  {
+    digitalWrite(LED_ALL_PIN, LOW);
+    digitalWrite(LED_REGISTERED_PIN, HIGH);
+    digitalWrite(LED_PRESENT_PIN, HIGH);
+  }
+  else if (swRegisteredState == LOW)
+  {
+    digitalWrite(LED_ALL_PIN, HIGH);
+    digitalWrite(LED_REGISTERED_PIN, LOW);
+    digitalWrite(LED_PRESENT_PIN, HIGH);
 
-  matcher.reset();
-  while (true) {
-    // 文字が送られるまで待つ
-    while (Serial.available() <= 0) {
-    }
-
-    matcher.put(Serial.read());
-
-    matcherState = matcher.getState();
-    if (matcherState != CountRefugeesMatcher::State::READING) {
-      break;
-    }
+  }
+  else if (swPresentState == LOW)
+  {
+    digitalWrite(LED_ALL_PIN, HIGH);
+    digitalWrite(LED_REGISTERED_PIN, HIGH);
+    digitalWrite(LED_PRESENT_PIN, LOW);
   }
 
-  if (matcherState == CountRefugeesMatcher::State::ACCEPTED) {
-    matcher.copyDigitsTo(numBuff);
-    setSegLedData();
-  }
+  /*
+    // 避難者数要求送信
+    Serial.println(sw == LOW ? "@019DNU" : "@019DNP");
 
-  delay(500);
+    matcher.reset();
+    while (true) {
+      // 文字が送られるまで待つ
+      while (Serial.available() <= 0) {
+      }
+
+      matcher.put(Serial.read());
+
+      matcherState = matcher.getState();
+      if (matcherState != CountRefugeesMatcher::State::READING) {
+        break;
+      }
+    }
+
+    if (matcherState == CountRefugeesMatcher::State::ACCEPTED) {
+      matcher.copyDigitsTo(numBuff);
+      setSegLedData();
+    }
+  */
+  delay(250);
 }
 
 // 7 セグ LED のデータを設定する
