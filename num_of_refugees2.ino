@@ -111,8 +111,6 @@ void setup() {
 }
 
 void loop() {
-  CountRefugeesMatcher::State matcherState;
-
   // シリアル通信の受信バッファを空にする
   while (Serial.available() > 0) {
     Serial.read();
@@ -157,6 +155,8 @@ void loop() {
   char serialBuff[SERIAL_BUFF_SIZE] = "";
   if (Serial.readBytesUntil('\n', serialBuff, SERIAL_BUFF_SIZE) > 0) {
     // 正規表現でマッチするかどうかを調べる
+    CountRefugeesMatcher::State matcherState;
+
     matcher.reset();
 
     for (char c : serialBuff) {
@@ -165,7 +165,7 @@ void loop() {
       }
 
       // 正規表現マッチャに文字を流し込む
-      matcher.put(c);
+      matcherState = matcher.put(c);
 
       if (matcherState != CountRefugeesMatcher::State::READING) {
         break;
