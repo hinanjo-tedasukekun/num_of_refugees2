@@ -70,6 +70,9 @@ int segLedData[N_DIGITS] = {
 
 // 数字を入れるバッファ
 char numBuff[N_DIGITS];
+// シリアル通信の読み取りバッファの大きさ
+constexpr int SERIAL_BUFF_SIZE = 32;
+
 // 避難者数パターンへのマッチャ
 CountRefugeesMatcher matcher;
 
@@ -82,6 +85,7 @@ void setup() {
   // シリアルポート接続待ち
   while (!Serial) {
   }
+  Serial.setTimeout(100);
 
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
@@ -118,39 +122,51 @@ void loop() {
   swRegisteredState = digitalRead(SW_REGISTERED_PIN);
   swPresentState = digitalRead(SW_PRESENT_PIN);
 
+  // 合計世帯人数モード
   if (swAllState == LOW)
   {
     digitalWrite(LED_ALL_PIN, LOW);
     digitalWrite(LED_REGISTERED_PIN, HIGH);
     digitalWrite(LED_PRESENT_PIN, HIGH);
+    // 避難者数要求送信
+    Serial.println("@019DNU");
   }
+
+  // 登録避難者数モード
   else if (swRegisteredState == LOW)
   {
     digitalWrite(LED_ALL_PIN, HIGH);
     digitalWrite(LED_REGISTERED_PIN, LOW);
     digitalWrite(LED_PRESENT_PIN, HIGH);
-
+    // 避難者数要求送信
+    Serial.println("@019DNR");
   }
+
+  // 在室避難者数モード
   else if (swPresentState == LOW)
   {
     digitalWrite(LED_ALL_PIN, HIGH);
     digitalWrite(LED_REGISTERED_PIN, HIGH);
     digitalWrite(LED_PRESENT_PIN, LOW);
+    // 避難者数要求送信
+    Serial.println("@019DNP");
   }
 
-  /*
-    // 避難者数要求送信
-    Serial.println(sw == LOW ? "@019DNU" : "@019DNP");
-
+  // シリアル通信で返信を読み取る
+  // 返信が1文字以上返ってきているときだけ次の処理を行う
+  char serialBuff[SERIAL_BUFF_SIZE] = "";
+  if (Serial.readBytesUntil('\n', serialBuff, SERIAL_BUFF_SIZE) > 0) {
+    // 正規表現でマッチするかどうかを調べる
     matcher.reset();
-    while (true) {
-      // 文字が送られるまで待つ
-      while (Serial.available() <= 0) {
+
+    for (char c : serialBuff) {
+      if (c == '\0') {
+        break;
       }
 
-      matcher.put(Serial.read());
+      // 正規表現マッチャに文字を流し込む
+      matcher.put(c);
 
-      matcherState = matcher.getState();
       if (matcherState != CountRefugeesMatcher::State::READING) {
         break;
       }
@@ -160,7 +176,8 @@ void loop() {
       matcher.copyDigitsTo(numBuff);
       setSegLedData();
     }
-  */
+  }
+
   delay(250);
 }
 

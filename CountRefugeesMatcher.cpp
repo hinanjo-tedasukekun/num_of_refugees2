@@ -49,10 +49,10 @@ CountRefugeesMatcher::State CountRefugeesMatcher::put(char c) {
     read(c, 'U', WAITING_N);
     break;
   case WAITING_N:
-    read(c, 'N', WAITING_U_P);
+    read(c, 'N', WAITING_U_P_R);
     break;
-  case WAITING_U_P:
-    if (c == 'U' || c == 'P') {
+  case WAITING_U_P_R:
+    if (c == 'U' || c == 'P' || c == 'R') {
       read_state_ = WAITING_SP;
     } else {
       state_ = REJECTED;
@@ -72,13 +72,7 @@ CountRefugeesMatcher::State CountRefugeesMatcher::put(char c) {
     readDigit(c, WAITING_NUM_4, true);
     break;
   case WAITING_NUM_4:
-    readDigit(c, WAITING_CR, true);
-    break;
-  case WAITING_CR:
-    read(c, '\r', WAITING_LF);
-    break;
-  case WAITING_LF:
-    state_ = (c == '\n') ? ACCEPTED : REJECTED;
+    readDigit(c, WAITING_NO_CHAR, true);
     break;
   default:
     state_ = REJECTED;
@@ -105,17 +99,16 @@ void CountRefugeesMatcher::read(
 // 数字を読む
   // c: 文字
   // next_state: 次の状態
-  // allow_cr: '\r' の入力を許可する（その場合受理状態へ遷移する）
 void CountRefugeesMatcher::readDigit(
-    char c, ReadState next_state, bool allow_cr
-) {
+  char c, ReadState next_state, bool allow_cr
+ ) {
   if (isDigit(c)) {
     num_buffer_[n_digits_] = c;
     ++n_digits_;
 
     read_state_ = next_state;
   } else if (allow_cr && c == '\r') {
-    read_state_ = WAITING_LF;
+    state_ = ACCEPTED;
   } else {
     state_ = REJECTED;
   }

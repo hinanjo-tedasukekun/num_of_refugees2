@@ -31,6 +31,8 @@ public:
 private:
   // 読み取り状態を表す型
   enum ReadState {
+    // 何も待っていない
+    WAITING_NO_CHAR,
     // '@' 待ち
     WAITING_AT,
     // '0' 待ち
@@ -43,8 +45,8 @@ private:
     WAITING_U_1,
     // 'N' 待ち
     WAITING_N,
-    // [UP] 待ち
-    WAITING_U_P,
+    // [UPR] 待ち
+    WAITING_U_P_R,
     // ' ' 待ち
     WAITING_SP,
     // 数字待ち 1 回目
@@ -54,11 +56,7 @@ private:
     // 数字待ち 3 回目
     WAITING_NUM_3,
     // 数字待ち 4 回目
-    WAITING_NUM_4,
-    // '\r' 待ち
-    WAITING_CR,
-    // '\n' 待ち
-    WAITING_LF
+    WAITING_NUM_4
   };
 
   // 有限状態機械の状態
